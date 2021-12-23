@@ -102,3 +102,21 @@ pub fn tokenize(input_text: &str) -> JsValue {
     )
     .unwrap()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::Value;
+    use wasm_bindgen_test::wasm_bindgen_test;
+
+    #[wasm_bindgen_test]
+    fn test_tokenize() {
+        let t = tokenize("関西国際空港限定トートバッグ");
+        let tokens: Vec<Value> = t.into_serde().unwrap();
+
+        assert_eq!(tokens.len(), 3);
+        assert_eq!(tokens[0].get("surface_form").unwrap(), "関西国際空港");
+        assert_eq!(tokens[1].get("surface_form").unwrap(), "限定");
+        assert_eq!(tokens[2].get("surface_form").unwrap(), "トートバッグ");
+    }
+}

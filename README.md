@@ -23,3 +23,9 @@ If you want to see more detail usage, please show examples/hello-lindera-js.
 ```bash
 wasm-pack build
 ```
+
+# test
+
+```bash
+wasm-pack test --node
+```
