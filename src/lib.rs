@@ -15,7 +15,7 @@ lazy_static! {
 }
 
 #[derive(Serialize)]
-struct KuromojiJSFormatToken<'a> {
+pub struct KuromojiJSFormatToken<'a> {
     word_id: Option<u32>,
     word_type: &'a str,
     word_position: u32,
@@ -67,7 +67,28 @@ fn detail_to_kuromoji_js_format<'a>(position: u32, token: &'a Token) -> Kuromoji
     }
 }
 
-#[wasm_bindgen]
+#[wasm_bindgen(typescript_custom_section)]
+const TS_KUROMOJI_JS_TOKEN: &'static str = r#"
+interface KuromojiJSToken {
+    word_id: number | null,
+    word_type: string,
+    word_position: number,
+    surface_form: string,
+    pos: string,
+    pos_detail_1: string,
+    pos_detail_2: string,
+    pos_detail_3: string,
+    conjugated_type: string,
+    conjugated_form: string,
+    basic_form: string,
+    reading: string,
+    pronunciation: string,
+}
+
+export function tokenize(input_text: string): KuromojiJSToken;
+"#;
+
+#[wasm_bindgen(skip_typescript)]
 pub fn tokenize(input_text: &str) -> JsValue {
     console_error_panic_hook::set_once();
     let tokens = TOKENIZER.lock().unwrap().tokenize(input_text).unwrap();
