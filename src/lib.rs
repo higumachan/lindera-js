@@ -1,9 +1,8 @@
-use std::sync::Mutex;
-use lindera::tokenizer::{Token, Tokenizer};
-use wasm_bindgen::prelude::*;
 use lazy_static::lazy_static;
+use lindera::tokenizer::{Token, Tokenizer};
 use serde::Serialize;
-
+use std::sync::Mutex;
+use wasm_bindgen::prelude::*;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -17,7 +16,7 @@ lazy_static! {
 
 #[derive(Serialize)]
 struct KuromojiJSFormatToken<'a> {
-    word_id: u32,
+    word_id: Option<u32>,
     word_type: &'a str,
     word_position: u32,
     surface_form: &'a str,
@@ -32,11 +31,12 @@ struct KuromojiJSFormatToken<'a> {
     pronunciation: &'a str,
 }
 
-fn detail_to_kuromoji_js_format<'a>(token: &'a Token) -> KuromojiJSFormatToken<'a> {
+fn detail_to_kuromoji_js_format<'a>(position: u32, token: &'a Token) -> KuromojiJSFormatToken<'a> {
+    if token.detail[0] != "UNK" {
         KuromojiJSFormatToken {
-            word_id: 0,
-            word_type: if token.detail[0] != "UNK" {"KNOWN"} else { "UNKNOWN" },
-            word_position: 0,
+            word_id: None,
+            word_type: { "KNOWN" },
+            word_position: position,
             surface_form: token.text,
             pos: token.detail[0].as_str(),
             pos_detail_1: token.detail[1].as_str(),
@@ -48,11 +48,36 @@ fn detail_to_kuromoji_js_format<'a>(token: &'a Token) -> KuromojiJSFormatToken<'
             reading: token.detail[7].as_str(),
             pronunciation: token.detail[8].as_str(),
         }
+    } else {
+        KuromojiJSFormatToken {
+            word_id: None,
+            word_type: "UNKNOWN",
+            word_position: position,
+            surface_form: token.text,
+            pos: token.detail[0].as_str(),
+            pos_detail_1: "＊",
+            pos_detail_2: "＊",
+            pos_detail_3: "＊",
+            conjugated_type: "＊",
+            conjugated_form: "＊",
+            basic_form: "＊",
+            reading: "＊",
+            pronunciation: "＊",
+        }
+    }
 }
 
 #[wasm_bindgen]
 pub fn tokenize(input_text: &str) -> JsValue {
+    console_error_panic_hook::set_once();
     let tokens = TOKENIZER.lock().unwrap().tokenize(input_text).unwrap();
 
-    JsValue::from_serde(&tokens.iter().map(|x| detail_to_kuromoji_js_format(&x)).collect::<Vec<_>>()).unwrap()
+    JsValue::from_serde(
+        &tokens
+            .iter()
+            .enumerate()
+            .map(|(i, x)| detail_to_kuromoji_js_format(i as u32, &x))
+            .collect::<Vec<_>>(),
+    )
+    .unwrap()
 }

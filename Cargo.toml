@@ -1,6 +1,6 @@
 [package]
 name = "lindera-js"
-version = "0.1.0"
+version = "0.1.2"
 authors = ["higumachan <harekumo792154@gmail.com>"]
 edition = "2018"
 description = "A lidera japanese tokenizer wrapper for javascript and typescript"
